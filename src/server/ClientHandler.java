@@ -9,8 +9,11 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * <p>For managing multiple user at a time each user is given instance of this class.</p>
+ *
+ * */
 public class ClientHandler implements Runnable {
-
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
     public Socket socket;
     private BufferedReader buffReader;
@@ -19,6 +22,10 @@ public class ClientHandler implements Runnable {
     private String password;
     private int type;
     private JSONObject isAuth;
+
+    /**
+     * @param socket Socket in which new user connected.
+     * */
     public ClientHandler(Socket socket) {
         // Constructors of all the private classes
         try {
@@ -39,7 +46,15 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // run method override
+    /**
+     * <p>It authorizes user or creates new user</p>
+     * <ul>
+     *     <li>
+     *         If valid user than sends response <i><b>{"isAuth": true}</b></i> and continues to take further query.
+     *     </li>
+     *     <li>If not valid user than sends response <i><b>{"isAuth": false}</b></i> and thread ends.</li>
+     * </ul>
+     * */
     @Override
     public void run() {
 
@@ -70,7 +85,7 @@ public class ClientHandler implements Runnable {
 
         while (socket.isConnected()) {
             try {
-                System.out.println("in while...");
+//                System.out.println("in while...");
                 requestFromClient = buffReader.readLine();
 //                QueryHandler requestHandler = new QueryHandler(requestFromClient);
 
@@ -78,17 +93,19 @@ public class ClientHandler implements Runnable {
                 jsonObject.put("res", "query received");
                 sendResponse(JsonHandler.fromJson(jsonObject));
 
-
             } catch (IOException e) {
                 closeAll(socket, buffReader, buffWriter);
             }
         }
     }
 
-    public void sendResponse(String messageToSend) {
+    /**
+     * To send response to user
+     * */
+    public void sendResponse(String responseToSend) {
 
         try {
-            this.buffWriter.write(messageToSend);
+            this.buffWriter.write(responseToSend);
             this.buffWriter.newLine();
             this.buffWriter.flush();
 
@@ -98,10 +115,19 @@ public class ClientHandler implements Runnable {
     }
 
 
+    /**
+     * to remove user
+     * */
     public void removeClientHandler() throws IOException {
         clientHandlers.remove(this);
     }
 
+    /**
+     * closes given streams if open
+     * @param socket Socket to be closed
+     * @param buffReader BufferedReader to be closed
+     * @param buffWriter BufferedWriter to be closed
+     * */
     public void closeAll(Socket socket, BufferedReader buffReader, BufferedWriter buffWriter) {
 
         // handle the removeClient function
@@ -122,9 +148,7 @@ public class ClientHandler implements Runnable {
                 socket.close();
             }
         } catch (IOException e) {
-//            e.getStackTrace();
+            e.getStackTrace();
         }
-
     }
-
 }

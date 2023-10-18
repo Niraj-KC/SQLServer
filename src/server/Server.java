@@ -6,6 +6,15 @@ import util.Config;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+/**
+ * <p><b>Main Class for our SQL Server</b></p>
+ *
+ * <p>It Creates Server which is listening for new users</p>
+ *
+ * <p>IF new user is connected it creates new thread for class ClientHandler where further process is carried out.</p>
+ * */
+
 public class Server {
     // create serverSocket class
     private ServerSocket serverSocket;
@@ -16,7 +25,6 @@ public class Server {
     }
 
     public void serverStart(){
-
         try{
             // check and loop the serverSocket
             while(!serverSocket.isClosed()){

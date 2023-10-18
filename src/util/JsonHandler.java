@@ -8,9 +8,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * Has the following functions
+ * <ol>
+ *     <li><b>toJson: </b> String -> JSONObject</li>
+ *     <li><b>fromJson: </b> JSONObject -> String</li>
+ *     <li><b>readJsonFile: </b> reads .json files</li>
+ *     <li><b>writeJsonFile: </b> writes .json file</li>
+ * </ol>
+ * */
+
 public class JsonHandler {
-
-
     public static JSONObject toJson(String str){
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject;
@@ -40,16 +48,14 @@ public class JsonHandler {
         }
     }
 
-    public static boolean writeJsonFile(JSONObject jsonObject, String path){
+    public static void writeJsonFile(JSONObject jsonObject, String path){
         try {
             FileWriter fileWriter = new FileWriter(path);
             fileWriter.write(jsonObject.toJSONString());
             fileWriter.flush();
             fileWriter.close();
-            return true;
         } catch (IOException e) {
             System.out.println("Enter valid path");
-            return false;
         }
     }
 
@@ -57,11 +63,10 @@ public class JsonHandler {
 }
 
 
+
+// for testing
 class Main{
     public static void main(String[] args) {
-
         JsonHandler.toJson("nnnn");
-
-
     }
 }
