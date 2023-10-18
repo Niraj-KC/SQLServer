@@ -1,8 +1,8 @@
-package Server;
+package server;
 
-import Server.Authorization.Authorization;
-import Server.QueryHandler.QueryHandler;
-import Util.JsonHandler;
+import server.authorization.Authorization;
+import util.JsonHandler;
+
 import org.json.simple.JSONObject;
 
 import java.io.*;

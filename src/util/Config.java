@@ -1,4 +1,4 @@
-package Util;
+package util;
 
 public class Config {
     public static String ip = "localhost";

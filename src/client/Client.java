@@ -1,7 +1,7 @@
-package Client;
+package client;
 
-import Util.Config;
-import Util.JsonHandler;
+import util.Config;
+import util.JsonHandler;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 

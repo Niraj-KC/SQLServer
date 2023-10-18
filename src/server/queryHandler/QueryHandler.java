@@ -1,4 +1,4 @@
-package Server.QueryHandler;
+package server.queryHandler;
 
 public class QueryHandler {
     String[] query;

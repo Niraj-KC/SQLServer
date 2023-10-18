@@ -1,7 +1,7 @@
-package Server;
+package server;
 
 
-import Util.Config;
+import util.Config;
 
 import java.io.*;
 import java.net.ServerSocket;

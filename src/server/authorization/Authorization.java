@@ -1,6 +1,6 @@
-package Server.Authorization;
+package server.authorization;
 
-import Util.JsonHandler;
+import util.JsonHandler;
 import org.json.simple.JSONObject;
 
 public class Authorization {
