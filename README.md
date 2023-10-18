@@ -6,9 +6,9 @@ Implementing basic SQL Server operations from scratch (Create, Delete, Select, U
 - Integer
 - double
 - boolean
-- datetime
-- date
-- time
+- DateTime
+- Date
+- Time
 
 ## Operations our SQL Server can perform:
 - CREATE DATABASE 
