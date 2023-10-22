@@ -1,6 +1,7 @@
 package server;
 
 import server.authorization.Authorization;
+import server.queryHandler.QueryHandler;
 import util.JsonHandler;
 
 import org.json.simple.JSONObject;
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 
 /**
  * <p>For managing multiple user at a time each user is given instance of this class.</p>
- *
  * */
 public class ClientHandler implements Runnable {
     public static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
@@ -22,6 +22,7 @@ public class ClientHandler implements Runnable {
     private String password;
     private int type;
     private JSONObject isAuth;
+    QueryHandler requestHandler;
 
     /**
      * @param socket Socket in which new user connected.
@@ -39,6 +40,7 @@ public class ClientHandler implements Runnable {
 //            System.out.println("C: u:"+username);
             this.password = buffReader.readLine();
 //            System.out.println("C: p:"+password);
+            this.requestHandler = new QueryHandler(username);
 
 
         } catch (IOException e) {
@@ -66,9 +68,11 @@ public class ClientHandler implements Runnable {
             if ((boolean)isAuth.get("isAuth")) {
                 clientHandlers.add(this);
                 sendResponse(JsonHandler.fromJson(isAuth));
+                System.out.println("User "+username+"'s access was granted.");
             } else {
                 sendResponse(JsonHandler.fromJson(isAuth));
                 closeAll(socket, buffReader, buffWriter);
+                System.out.println("User "+username+"'s access was denied.");
                 return;
             }
         } else {
@@ -76,9 +80,11 @@ public class ClientHandler implements Runnable {
             if ((boolean)isAuth.get("isAuth")) {
                 clientHandlers.add(this);
                 sendResponse(JsonHandler.fromJson(isAuth));
+                System.out.println("New user "+username+" was created. and was granted access");
             } else {
                 sendResponse(JsonHandler.fromJson(isAuth));
                 closeAll(socket, buffReader, buffWriter);
+                System.out.println("New user was not created.");
                 return;
             }
         }
@@ -87,11 +93,10 @@ public class ClientHandler implements Runnable {
             try {
 //                System.out.println("in while...");
                 requestFromClient = buffReader.readLine();
-//                QueryHandler requestHandler = new QueryHandler(requestFromClient);
+                JSONObject jsonObject = requestHandler.processRequest(requestFromClient);
+                System.out.println("res: "+jsonObject.toJSONString());
+//                sendResponse(JsonHandler.fromJson(jsonObject));
 
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("res", "query received");
-                sendResponse(JsonHandler.fromJson(jsonObject));
 
             } catch (IOException e) {
                 closeAll(socket, buffReader, buffWriter);
