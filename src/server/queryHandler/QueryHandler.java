@@ -25,8 +25,8 @@ public class QueryHandler {
     /**
      * response = {
      *      Status: either of [created, successful, notCreated, failed, notExecuted]
-     *      Details: Null or description of Status
-     *      Data: JSONObject's String
+     *      Details: description of Status
+     *      Data: null or JSONObject's String
      * }
      * */
     JSONObject response;
@@ -184,7 +184,7 @@ public class QueryHandler {
 
             if(i==0 && !includesIndex){
                 ExcelOperations.insertData(wb, cell0i, CellDataType.String, "ID");
-                ExcelOperations.insertData(wb, cell1i, CellDataType.String, "INT PRIMARY KEY");
+                ExcelOperations.insertData(wb, cell1i, CellDataType.String, "Int_Primary_Key");
                 continue;
             }
 
@@ -193,7 +193,7 @@ public class QueryHandler {
             System.out.println(colNameType[1]);
             System.out.println();
             ExcelOperations.insertData(wb, cell0i, CellDataType.String, colNameType[0]);
-            ExcelOperations.insertData(wb, cell1i, CellDataType.String, colNameType[1]);
+            ExcelOperations.insertData(wb, cell1i, CellDataType.String, i==0?"Int_Primary_Key":colNameType[1]);
 
         }
 
@@ -232,9 +232,17 @@ public class QueryHandler {
             String tableName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+(\\w+)\\s+DROP\\s+COLUMN\\s+\\w+\\s*;");
             String columnName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+\\w+\\s+DROP\\s+COLUMN\\s+(\\w+)\\s*;");
             System.out.println("tn: "+ tableName+ " colN: "+columnName);
-            //todo edit excel
+
+            ExcelOperations.deleteColumn(curDbPath, tableName, columnName);
+            setResponse(Status.successful, "Column "+ columnName +" removed from "+tableName, null);
+
+        }
+        catch (IOException ioException){
+            // for reading and writing excel file
+            setResponse(Status.failed, "Failed due to unknown error", null);
         }
         catch (Exception e){
+            // error in query
             System.out.println("error: "+e);
             setResponse(Status.failed, "Syntax error", null);
         }
@@ -270,10 +278,10 @@ public class QueryHandler {
 // for testing
 class Main{
     public static void main(String[] args) {
-        QueryHandler queryHandler = new QueryHandler("suraj");
+        QueryHandler queryHandler = new QueryHandler("kc");
 
-//        System.out.println(queryHandler.processRequest("CREATE DATABASE database_name ").toJSONString());
-//        System.out.println(queryHandler.processRequest("CREATE DATABASE testingDB IF NOT EXISTS;").toJSONString());
+//        System.out.println(queryHandler.processRequest("CREATE DATABASE database_name3 ").toJSONString());
+        System.out.println(queryHandler.processRequest("CREATE DATABASE database_name1 IF NOT EXISTS;").toJSONString());
 
 //        System.out.println(queryHandler.processRequest("CREATE DATABASE TABLE IF NOT EXISTS").toJSONString());
 //        System.out.println(queryHandler.processRequest("CREATE DATABASE TABLE ").toJSONString());
@@ -281,6 +289,6 @@ class Main{
 //        System.out.println(queryHandler.processRequest("CREATE TABLE Customer2(CustomerID INT PRIMARY KEY, CustomerName String, LastName String, Gender Boolean, Age int, Phone int);"));
 
 //        System.out.println(queryHandler.processRequest("DROP TABLE Customer;").toJSONString());
-        System.out.println(queryHandler.processRequest("ALTER TABLE Customers DROP COLUMN ContactName;"));
+        System.out.println(queryHandler.processRequest("ALTER TABLE Customer1 DROP COLUMN bod;"));
     }
 }
