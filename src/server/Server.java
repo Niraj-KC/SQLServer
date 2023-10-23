@@ -22,6 +22,7 @@ public class Server {
     // constructor of ServerSocket class
     public Server(ServerSocket serverSocket){
         this.serverSocket = serverSocket;
+        System.out.println("Server running....");
     }
 
     public void serverStart(){

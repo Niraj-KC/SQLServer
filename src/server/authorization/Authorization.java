@@ -4,6 +4,8 @@ import util.Config;
 import util.JsonHandler;
 import org.json.simple.JSONObject;
 
+import java.io.File;
+
 
 /**
  * To authorize user
@@ -56,7 +58,8 @@ public class Authorization {
         else {
             jsonObject.put(username, password);
             JsonHandler.writeJsonFile(jsonObject, path);
-            isAuth.put("isAuth", true);
+            File file = new File(Config.databaseStoragePath+"/"+username);
+            isAuth.put("isAuth", file.mkdir());
         }
         return isAuth;
     }
