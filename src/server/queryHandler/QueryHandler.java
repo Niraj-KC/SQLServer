@@ -12,11 +12,11 @@ import util.customVar.Status;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class QueryHandler {
-    private String[] queryArr;
     private String query;
     private String curDbPath;
     private final String workSpacePath;
@@ -31,7 +31,6 @@ public class QueryHandler {
      * */
     JSONObject response;
     public QueryHandler(String username){
-
         this.response = new JSONObject();
         this.workSpacePath = Config.databaseStoragePath+"/"+username;
     }
@@ -43,7 +42,6 @@ public class QueryHandler {
     }
 
     public JSONObject processRequest(String request){
-        queryArr = request.trim().split("\\s");
         query = request.trim();
         System.out.println("Query: "+   query);
 
@@ -51,20 +49,26 @@ public class QueryHandler {
             setResponse(Status.failed, "Syntax-Error: semi-colon (;) missing in query", null);
             System.out.println(response.toJSONString());
         }
-        else if(queryArr[0].equals("CREATE")){
-            if(queryArr[1].equals("DATABASE")){
-                createDatabase(query.contains("IF NOT EXISTS"));
-            } else if (queryArr[1].equals("TABLE")) {
-                createTable();
-            }
+        else if(doesMatches(query, "CREATE\\s+DATABASE\\s+(\\w+)\\s*;")){
+            createDatabase(false);
+        }
+        else if(doesMatches(query, "CREATE\\s+DATABASE\\s+(\\w+)\\s+IF\\s+NOT\\s+EXISTS\\s*;")){
+            createDatabase(true);
+        }
+        else if(doesMatches(query, "CREATE\\s+TABLE\\s+(\\w+)\\s*\\(")){
+            createTable();
         }
         else if (doesMatches(query, "DROP\\s+TABLE\\s+\\w+;")){
             dropTable();
         }
 
         else if (doesMatches(query, "ALTER\\s+TABLE\\s+\\w+\\s+DROP\\s+COLUMN\\s+\\w+;")){
-            System.out.println("AT");
             dropColum();
+        }
+
+        // [^chars] -> group of character other than chars => here [^)] -> all character except ')'
+        else if (doesMatches(query, "INSERT\\s+INTO\\s+\\w+\\s*\\([^)]+\\)\\s+VALUES\\s*\\([^)]+\\)\\s*;")) {
+
         }
 
         return response;
@@ -75,7 +79,18 @@ public class QueryHandler {
      * @implNote CREATE DATABASE database_name <br><br> CREATE DATABASE database_name IF NOT EXISTS
      * */
     private void createDatabase(boolean checkForExistence){
-        String filename = queryArr[2].trim();
+        System.out.println("cDB :"+checkForExistence);
+        String filename;
+        try {
+            filename = fromQueryExtract(query, checkForExistence
+                    ? "CREATE\\s+DATABASE\\s+(\\w+)\\s+IF\\s+NOT\\s+EXISTS\\s*;"
+                    : "CREATE\\s+DATABASE\\s+(\\w+)\\s*;").get(0);
+        }
+        catch (Exception e){
+            setResponse(Status.failed, "Syntax Error", null);
+            return;
+        }
+
         if (Config.reservedKeywords.contains(filename)){
             setResponse(Status.failed, "Given database name is a reserved keyword.", null);
             return;
@@ -110,7 +125,7 @@ public class QueryHandler {
     private void createTable() {
         String tableName;
         try {
-            tableName = fromQueryExtract("CREATE TABLE (\\w+)\\s*\\(", query);
+            tableName = fromQueryExtract(query, "CREATE TABLE (\\w+)\\s*\\(").get(0);
             System.out.println("tn: "+tableName);
         }
         catch (Exception e){
@@ -163,7 +178,7 @@ public class QueryHandler {
         String colStr;
         String regex = "CREATE TABLE \\w+\\((.*?)\\);";
         try {
-            colStr = fromQueryExtract(regex, query);
+            colStr = fromQueryExtract(query, regex).get(0);
             colHeading = colStr.split(",");
 
         }
@@ -203,7 +218,7 @@ public class QueryHandler {
     private void dropTable() {
 //        System.out.println("DT");
         try{
-            String tableName = fromQueryExtract(query, "DROP\\s+TABLE\\s+(\\w+)\\s*;");
+            String tableName = fromQueryExtract(query, "DROP\\s+TABLE\\s+(\\w+)\\s*;").get(0);
             System.out.println("tn: "+tableName);
             if(curDbPath == null){
                 setResponse(Status.failed, "Connect to database first.", null);
@@ -229,8 +244,8 @@ public class QueryHandler {
 
     private void dropColum(){
         try {
-            String tableName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+(\\w+)\\s+DROP\\s+COLUMN\\s+\\w+\\s*;");
-            String columnName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+\\w+\\s+DROP\\s+COLUMN\\s+(\\w+)\\s*;");
+            String tableName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+(\\w+)\\s+DROP\\s+COLUMN\\s+\\w+\\s*;").get(0);
+            String columnName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+\\w+\\s+DROP\\s+COLUMN\\s+(\\w+)\\s*;").get(0);
             System.out.println("tn: "+ tableName+ " colN: "+columnName);
 
             ExcelOperations.deleteColumn(curDbPath, tableName, columnName);
@@ -249,22 +264,37 @@ public class QueryHandler {
     }
 
 
+    private void insertData(){
+        try{
+        String tableName = fromQueryExtract(query, "INSERT\\s+INTO\\s+(\\w+)\\s*\\(").get(0);
+        String[] colHeadings = fromQueryExtract(query, "\\(([^)]+)\\)\\s*VALUES").get(0).split(",\\s*");
+        ArrayList<String> rows = fromQueryExtract(query, "VALUES\\s*((?:\\([^)]+\\),\\s*)*\\([^)]+\\));");
 
-    private String fromQueryExtract(String query, String regexStr) throws Exception {
+        for (String row: rows){
+            String[] values = row.split(",\\s*");
+
+        }
+
+        }
+        catch (Exception e){
+            setResponse(Status.failed, "Syntax Error.", null);
+        }
+    }
+
+    private ArrayList<String> fromQueryExtract(String query, String regexStr) throws Exception {
         Pattern pattern = Pattern.compile(regexStr);
         Matcher matcher = pattern.matcher(query);
-        try {
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-            else {
-                throw new Exception("No match found.");
-            }
+        ArrayList<String> groups = new ArrayList<String>();
+
+        while(matcher.find()){
+            groups.add(matcher.group(1));
         }
-        catch (IndexOutOfBoundsException indexOutOfBoundsException){
+
+        if(groups.isEmpty()){
             throw new Exception("No match found.");
         }
 
+        return groups;
     }
     private boolean doesMatches(String query, String regexStr){
         Pattern pattern = Pattern.compile(regexStr);
