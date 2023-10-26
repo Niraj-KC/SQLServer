@@ -95,7 +95,7 @@ public class ClientHandler implements Runnable {
                 requestFromClient = buffReader.readLine();
                 JSONObject jsonObject = requestHandler.processRequest(requestFromClient);
                 System.out.println("res: "+jsonObject.toJSONString());
-//                sendResponse(JsonHandler.fromJson(jsonObject));
+                sendResponse(JsonHandler.fromJson(jsonObject));
 
 
             } catch (IOException e) {

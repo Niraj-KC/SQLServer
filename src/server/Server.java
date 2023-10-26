@@ -38,7 +38,6 @@ public class Server {
                 thread.start();
             }
         } catch (IOException e){
-
         }
     }
     // this will close the server
