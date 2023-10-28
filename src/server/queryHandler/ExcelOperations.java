@@ -7,6 +7,9 @@ import org.apache.poi.xssf.usermodel.*;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -43,36 +46,75 @@ public class ExcelOperations {
         return sheetNames;
     }
 
-    public static void insertData(XSSFWorkbook wb, XSSFCell cell, CellDataType type, Object data){
+    public static void insertData(XSSFWorkbook wb, XSSFCell cell, CellDataType type, Object data) throws Exception{
 
         switch (type){
-            case Int -> cell.setCellValue((Integer) data);
+            case Int,Int_Primary_Key -> cell.setCellValue((Integer) data);
             case Double -> cell.setCellValue((double) data);
             case String -> cell.setCellValue((String) data);
+            case Long -> cell.setCellValue((long) data);
             case Boolean -> cell.setCellValue((boolean) data);
             case Date -> {
                 CreationHelper creationHelper = wb.getCreationHelper();
                 CellStyle cellStyle = wb.createCellStyle();
-                cellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy"));
+                cellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/MM/yyyy"));
                 cell.setCellValue((Date) data);
                 cell.setCellStyle(cellStyle);
+                if (cell.getNumericCellValue() == -1){
+                    throw new Exception("Please check Date format dd/MM/yyyy");
+                }
+
             }
             case DateTime -> {
+
                 CreationHelper creationHelper = wb.getCreationHelper();
                 CellStyle cellStyle = wb.createCellStyle();
-                cellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm:ss"));
+                cellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/MM/yyyy HH:mm:ss"));
                 cell.setCellValue((Date) data);
                 cell.setCellStyle(cellStyle);
+                if (cell.getNumericCellValue() == -1){
+                    throw new Exception("Please check Date format dd/MM/yyyy HH:mm:ss");
+                }
             }
         }
 
+    }
+
+    public static Object typeCastStringData(String data, CellDataType type) throws Exception {
+        Object parsedData = null;
+        switch (type){
+            case Int, Int_Primary_Key -> parsedData = Integer.parseInt(data);
+            case Double -> parsedData = Double.parseDouble(data);
+            case Long -> parsedData = Long.parseLong(data);
+            case String -> parsedData = data;
+            case Boolean -> parsedData = Boolean.parseBoolean(data);
+            case Date -> {
+                try {
+                    parsedData = new SimpleDateFormat("dd/MM/yyyy").parse(data);
+                }
+                catch (ParseException parseException) {
+                    throw new Exception("Please check Date format dd/MM/yyyy");
+                }
+            }
+            case DateTime -> {
+                try{
+                    parsedData = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(data);
+                }
+                catch (ParseException parseException){
+                    throw new Exception("Please check DateTime format dd/MM/yyyy HH:mm:ss");
+                }
+            }
+        }
+
+        return parsedData;
     }
 
     public static Object getData(XSSFCell cell , CellDataType type){
         Object data;
         switch (type){
             case String -> data = cell.getStringCellValue();
-            case Int, Int_Primary_Key -> data = Double.valueOf(cell.getNumericCellValue()).intValue();
+            case Int, Int_Primary_Key-> data = Double.valueOf(cell.getNumericCellValue()).intValue();
+            case Long -> data = Double.valueOf(cell.getNumericCellValue()).longValue();
             case Double -> data = cell.getNumericCellValue();
             case Date, DateTime-> data = cell.getDateCellValue();
             case Boolean -> data = cell.getBooleanCellValue();
@@ -82,11 +124,24 @@ public class ExcelOperations {
     }
 
 
-    public static CellDataType getCellType(XSSFSheet ws, XSSFCell cell){
-        return CellDataType.valueOf(ws.getRow(1).getCell(cell.getColumnIndex()).getStringCellValue());
+    public static CellDataType getCellType(XSSFSheet ws, int colIndex){
+        return CellDataType.valueOf(ws.getRow(1).getCell(colIndex).getStringCellValue());
     }
 
-    public static void deleteColumn(String path, String wsName, String colName) throws IOException {
+    public static int getColumnIndex(XSSFSheet ws, String colHeading){
+       XSSFRow row = ws.getRow(0);
+       int idx = -1;
+//        System.out.println("last col: "+row.getLastCellNum());
+       for (int i=0; i<row.getLastCellNum(); i++) {
+           if (colHeading.equals(row.getCell(i).getStringCellValue())) {
+               idx = i;
+               break;
+           }
+       }
+       return idx;
+    }
+
+    public static void deleteColumn(String path, String wsName, String colName) throws IOException, Exception {
         XSSFWorkbook wb = readExcelFile(path);
         XSSFSheet ws = wb.getSheet(wsName);
 
