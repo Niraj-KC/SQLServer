@@ -3,6 +3,8 @@ package server.queryHandler;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.xssf.usermodel.*;
+import org.json.simple.JSONObject;
+import util.JsonHandler;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -47,7 +49,6 @@ public class ExcelOperations {
     }
 
     public static void insertData(XSSFWorkbook wb, XSSFCell cell, CellDataType type, Object data) throws Exception{
-
         switch (type){
             case Int,Int_Primary_Key -> cell.setCellValue((Integer) data);
             case Double -> cell.setCellValue((double) data);
@@ -66,7 +67,6 @@ public class ExcelOperations {
 
             }
             case DateTime -> {
-
                 CreationHelper creationHelper = wb.getCreationHelper();
                 CellStyle cellStyle = wb.createCellStyle();
                 cellStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/MM/yyyy HH:mm:ss"));
@@ -111,6 +111,7 @@ public class ExcelOperations {
 
     public static Object getData(XSSFCell cell , CellDataType type){
         Object data;
+        if(cell == null) return "null";
         switch (type){
             case String -> data = cell.getStringCellValue();
             case Int, Int_Primary_Key-> data = Double.valueOf(cell.getNumericCellValue()).intValue();
@@ -118,7 +119,7 @@ public class ExcelOperations {
             case Double -> data = cell.getNumericCellValue();
             case Date, DateTime-> data = cell.getDateCellValue();
             case Boolean -> data = cell.getBooleanCellValue();
-            default -> data = null;
+            default -> data = "null";
         }
         return data;
     }
@@ -208,4 +209,25 @@ public class ExcelOperations {
         saveExcelFile(path, wb);
     }
 
+
+
+    public static ArrayList<Integer> getRowIndexes(XSSFSheet ws, String colName, Object searchObj) {
+        ArrayList<Integer> indexes = new ArrayList<>();
+
+        int colIdx = getColumnIndex(ws, colName);
+        CellDataType dataType = getCellType(ws, colIdx);
+        System.out.println("fun::sObj :"+searchObj);
+
+        System.out.println("fun:: colIdx: "+colIdx+" "+ dataType);
+        for(int i=2; i<=ws.getLastRowNum(); i++){
+            if(ws.getRow(i)==null) continue;
+            try {
+                if(getData(ws.getRow(i).getCell(colIdx), dataType).equals(typeCastStringData(searchObj.toString(), dataType))) indexes.add(i);
+            } catch (Exception e) {
+                System.out.println("Error: "+e);
+            }
+        }
+
+        return indexes;
+    }
 }

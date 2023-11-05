@@ -92,7 +92,7 @@ public class Client {
             System.out.print("Query: ");
             String messageToSend = sc.nextLine();
             sendRequest(messageToSend);
-            Thread.sleep(200);
+            Thread.sleep(500);
         }
     }
 

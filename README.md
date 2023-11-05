@@ -17,6 +17,7 @@ Implementing basic SQL Server operations from scratch (Create, Delete, Select, U
 - SELECT
 - DROP
 - DELETE
+- UPDATE
 
 
 ## Interpitations

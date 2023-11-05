@@ -93,6 +93,12 @@ public class ClientHandler implements Runnable {
             try {
 //                System.out.println("in while...");
                 requestFromClient = buffReader.readLine();
+
+                if(requestFromClient.trim().toLowerCase().equals("log out")){
+                    closeAll(socket, buffReader, buffWriter);
+                    removeClientHandler();
+                    break;
+                }
                 JSONObject jsonObject = requestHandler.processRequest(requestFromClient);
                 System.out.println("res: "+jsonObject.toJSONString());
                 sendResponse(JsonHandler.fromJson(jsonObject));
