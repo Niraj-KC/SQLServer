@@ -29,7 +29,7 @@ public class QueryHandler {
      * response = {
      * Status: either of [created, successful, notCreated, failed, notExecuted]
      * Details: description of Status
-     * Data: null or JSONObject's String
+     * Data: null or JSONObject
      * }
      */
     JSONObject response;
@@ -39,9 +39,13 @@ public class QueryHandler {
         this.response = new JSONObject();
         this.workSpacePath = Config.databaseStoragePath + "/" + username;
         this.indexManagerPath = workSpacePath + "/DBIndexManager.json";
-        this.indexManager = JsonHandler.readJsonFile(indexManagerPath);
     }
 
+    /**
+     * Status: either of [created, successful, notCreated, failed, notExecuted]
+     * Details: description of Status
+     * Data: null or JSONObject
+     * */
     private void setResponse(Status status, String details, Object data) {
         response.put(ResponseKeys.Status.toString(), status.toString());
         response.put(ResponseKeys.Details.toString(), details);
@@ -49,7 +53,7 @@ public class QueryHandler {
     }
 
     public JSONObject processRequest(String request) {
-
+        this.indexManager = JsonHandler.readJsonFile(indexManagerPath);
         query = request.trim();
         System.out.println("Query: " + query);
 
@@ -84,7 +88,9 @@ public class QueryHandler {
             System.out.println("Update");
             updateValue();
         }
-
+        else {
+            setResponse(Status.failed, "Syntax Error", null);
+        }
         JSONObject sendRes = response;
         response = new JSONObject();
         return sendRes;
@@ -238,6 +244,9 @@ public class QueryHandler {
     }
 
 
+    /**
+     * Deletes a given table
+     * */
     private void dropTable() {
 //        System.out.println("DT");
         try {
@@ -270,6 +279,10 @@ public class QueryHandler {
         }
     }
 
+
+    /**
+     * Deletes a column
+     * */
     private void dropColum() {
         try {
             String tableName = fromQueryExtract(query, "ALTER\\s+TABLE\\s+(\\w+)\\s+DROP\\s+COLUMN\\s+\\w+\\s*;").get(0);
@@ -290,6 +303,10 @@ public class QueryHandler {
     }
 
 
+
+    /**
+     * Inserts given data into given column
+     * */
     private void insertData() {
         try {
             String tableName = fromQueryExtract(query, "INSERT\\s+INTO\\s+(\\w+)\\s*\\(").get(0);
@@ -398,6 +415,11 @@ public class QueryHandler {
     }
 
 
+
+    /**
+     * Deletes row satisfying given condition
+     *
+     * */
     private void deleteRow() {
         try {
             String tableName = fromQueryExtract(query, "DELETE\\s+FROM\\s+(\\w+)\\s+WHERE").get(0);
@@ -441,6 +463,9 @@ public class QueryHandler {
     }
 
 
+    /**
+     * returns required data from database
+     * */
     private void getSelectedData(boolean withWhereClause) {
         try {
             String tableName = fromQueryExtract(query, "SELECT\\s+[^;]+\\s+FROM\\s+(\\w+).*?").get(0);
@@ -533,6 +558,10 @@ public class QueryHandler {
     }
 
 
+
+    /**
+     * Update value of given column
+     * */
     private void updateValue(){
         try {
             String tableName = fromQueryExtract(query, "UPDATE\\s+(\\w+)\\s+SET").get(0);
@@ -594,6 +623,15 @@ public class QueryHandler {
             setResponse(Status.failed, "Syntax Error", null);
         }
     }
+
+
+    /**
+     * To extract data for a string
+     * @param regexStr regex for extraction
+     * @param query String
+     *
+     * @return ArrayList
+     * */
     private ArrayList<String> fromQueryExtract(String query, String regexStr) throws Exception {
         Pattern pattern = Pattern.compile(regexStr);
         Matcher matcher = pattern.matcher(query);
@@ -610,6 +648,14 @@ public class QueryHandler {
         return groups;
     }
 
+
+    /**
+     * @param query string to match
+     * @param regexStr regex to match string
+     * @return boolean
+     * <br>true - if matches
+     * <br>false - if does not matches
+     * */
     private boolean doesMatches(String query, String regexStr) {
         Pattern pattern = Pattern.compile(regexStr);
         Matcher matcher = pattern.matcher(query);

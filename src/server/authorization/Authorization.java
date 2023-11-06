@@ -60,6 +60,7 @@ public class Authorization {
             JsonHandler.writeJsonFile(jsonObject, path);
             File file = new File(Config.databaseStoragePath+"/"+username);
             isAuth.put("isAuth", file.mkdir());
+            JsonHandler.writeJsonFile(new JSONObject(), Config.databaseStoragePath+"/"+username+"/DBIndexManager.json");
         }
         return isAuth;
     }
